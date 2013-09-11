@@ -35,6 +35,8 @@ ANDROID_GCC_VER=4.8
 # Android API version; eg 9 (Android 2.3), 14 (Android 4.0) etc.
 ANDROID_API_VER=9
 
+ANDROID_TOOLCHAIN_HOME=$HOME/android
+
 #-------------------------------------------------------------------------------
 # No more user config beyond here.
 
@@ -48,7 +50,7 @@ function die_with {
 export CROSS_COMPILE=arm-linux-androideabi
 
 # I put all my dev stuff in here
-export DEV_PREFIX=$HOME/Android
+export DEV_PREFIX=$ANDROID_TOOLCHAIN_HOME
 test -d ${DEV_PREFIX} || die_with "Error : DEV_PREFIX '$DEV_PREFIX' does not exist."
 
 # Don't forget to adjust this to your NDK path
