@@ -504,7 +504,7 @@ if test x$ac_cv_c_compiler_gnu = xyes ; then
 	MN_ADD_CFLAGS([-Wpointer-arith])
 	MN_ADD_CFLAGS([-funsigned-char])
 
-	MN_ADD_CFLAGS([-D_FORTIFY_SOURCE=2])
+	#MN_ADD_CFLAGS([-D_FORTIFY_SOURCE=2])
 
 	if test x$enable_stack_smash_protection = "xyes" ; then
 		XIPH_GCC_STACK_PROTECTOR
