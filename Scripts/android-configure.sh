@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-# Copyright (C) 2013 Erik de Castro Lopo <erikd@mega-nerd.com>
+# Copyright (C) 2013-2016 Erik de Castro Lopo <erikd@mega-nerd.com>
 #
 # All rights reserved.
 #
@@ -27,15 +27,24 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Android NDK version number; eg r8e, r9 etc
-ANDROID_NDK_VER=r9
+#ANDROID_NDK_VER=r9
+ANDROID_NDK_VER=25.2.9519653
 
 # Android NDK gcc version; eg 4.7, 4.9 etc.
-ANDROID_GCC_VER=4.8
+#ANDROID_GCC_VER=4.8
 
-# Android API version; eg 9 (Android 2.3), 14 (Android 4.0) etc.
-ANDROID_API_VER=9
+# Android API version; eg 14 (Android 4.0), 21 (Android 5.0)  etc.
+ANDROID_API_VER=${ANDROID_API_VER:-14}
 
-ANDROID_TOOLCHAIN_HOME=$HOME/android
+ANDROID_TARGET=${ANDROID_TARGET:-arm-linux-androideabi}
+
+ANDROID_TOOLCHAIN_HOME=$HOME/Android/Sdk/ndk/
+
+if test -z ${ANDROID_TOOLCHAIN_HOME} ; then
+	echo "Environment variable ANDROID_TOOLCHAIN_HOME not defined."
+	echo "This should point to the directory containing the Android NDK."
+    exit 1
+	fi
 
 #-------------------------------------------------------------------------------
 # No more user config beyond here.
@@ -47,43 +56,44 @@ function die_with {
 	exit 1
 }
 
-export CROSS_COMPILE=arm-linux-androideabi
+#export CROSS_COMPILE=arm-linux-androideabi
+export CROSS_COMPILE=
 
 # I put all my dev stuff in here
 export DEV_PREFIX=$ANDROID_TOOLCHAIN_HOME
 test -d ${DEV_PREFIX} || die_with "Error : DEV_PREFIX '$DEV_PREFIX' does not exist."
 
 # Don't forget to adjust this to your NDK path
-export ANDROID_NDK=${DEV_PREFIX}/android-ndk-${ANDROID_NDK_VER}
+export ANDROID_NDK=${DEV_PREFIX}/${ANDROID_NDK_VER}
 test -d ${ANDROID_NDK} || die_with "Error : ANDROID_NDK '$ANDROID_NDK' does not exist."
 
-export ANDROID_PREFIX=${ANDROID_NDK}/toolchains/arm-linux-androideabi-${ANDROID_GCC_VER}/prebuilt/${BUILD_MACHINE}
+export ANDROID_PREFIX=${ANDROID_NDK}/toolchains/llvm/prebuilt/${BUILD_MACHINE}
 test -d ${ANDROID_PREFIX} || die_with "Error : ANDROID_PREFIX '$ANDROID_PREFIX' does not exist."
 
-export SYSROOT=${ANDROID_NDK}/platforms/android-${ANDROID_API_VER}/arch-arm
-test -d ${SYSROOT} || die_with "Error : SYSROOT '$SYSROOT' does not exist."
+#export SYSROOT=${ANDROID_NDK}/platforms/android-${ANDROID_API_VER}/arch-arm
+#test -d ${SYSROOT} || die_with "Error : SYSROOT '$SYSROOT' does not exist."
 
 export CROSS_PREFIX=${ANDROID_PREFIX}/bin/${CROSS_COMPILE}
-test -f ${CROSS_PREFIX}-gcc || die_with "Error : CROSS_PREFIX compiler '${CROSS_PREFIX}-gcc' does not exist."
+test -f ${CROSS_PREFIX}clang || die_with "Error : CROSS_PREFIX compiler '${CROSS_PREFIX}clang' does not exist."
 
 
 # Non-exhaustive lists of compiler + binutils
 # Depending on what you compile, you might need more binutils than that
-export CPP=${CROSS_PREFIX}-cpp
-export AR=${CROSS_PREFIX}-ar
-export AS=${CROSS_PREFIX}-as
-export NM=${CROSS_PREFIX}-nm
-export CC=${CROSS_PREFIX}-gcc
-export CXX=${CROSS_PREFIX}-g++
-export LD=${CROSS_PREFIX}-ld
-export RANLIB=${CROSS_PREFIX}-ranlib
+export CPP=${CROSS_PREFIX}llvm-cpp
+export AR=${CROSS_PREFIX}llvm-ar
+export AS=${CROSS_PREFIX}llvm-as
+export NM=${CROSS_PREFIX}llvm-nm
+export CC=${CROSS_PREFIX}clang
+export CXX=${CROSS_PREFIX}clang++
+export LD=${CROSS_PREFIX}llvm-ld
+export RANLIB=${CROSS_PREFIX}llvm-ranlib
 
 # Don't mix up .pc files from your host and build target
 export PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
 
 # Set up the needed FLAGS.
-export CFLAGS="${CFLAGS} -gstabs --sysroot=${SYSROOT} -I${SYSROOT}/usr/include -I${ANDROID_PREFIX}/include"
-export CXXFLAGS="${CXXFLAGS} -gstabs -fno-exceptions --sysroot=${SYSROOT} -I${SYSROOT}/usr/include -I${ANDROID_PREFIX}/include -I${ANDROID_NDK}/sources/cxx-stl/gnu-libstdc++/${ANDROID_GCC_VER}/include/ -I${ANDROID_NDK}/sources/cxx-stl/gnu-libstdc++/${ANDROID_GCC_VER}/libs/armeabi/include"
+export CFLAGS="${CFLAGS} -D__LF_ANDROID__ --sysroot=${SYSROOT} -I${SYSROOT}/usr/include -I${ANDROID_PREFIX}/include"
+export CXXFLAGS="${CXXFLAGS} -D__LF_ANDROID__ -fno-exceptions --sysroot=${SYSROOT} -I${SYSROOT}/usr/include -I${ANDROID_PREFIX}/include -I${ANDROID_NDK}/sources/cxx-stl/gnu-libstdc++/${ANDROID_GCC_VER}/include/ -I${ANDROID_NDK}/sources/cxx-stl/gnu-libstdc++/${ANDROID_GCC_VER}/libs/armeabi/include"
 
 export CPPFLAGS="${CFLAGS}"
 export LDFLAGS="${LDFLAGS} -L${SYSROOT}/usr/lib -L${ANDROID_PREFIX}/lib"
