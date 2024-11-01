@@ -1009,6 +1009,7 @@ win32_play (int argc, char *argv [])
 */
 
 #if defined (HAVE_SNDIO_H)
+#ifndef __linux__
 
 static void
 sndio_play (int argc, char *argv [])
@@ -1062,6 +1063,7 @@ sndio_play (int argc, char *argv [])
 	return ;
 } /* sndio_play */
 
+#endif /* not linux */
 #endif /* sndio */
 
 /*------------------------------------------------------------------------------
